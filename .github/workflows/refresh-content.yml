@@ -1,0 +1,35 @@
+name: Refresh department content
+
+on:
+  schedule:
+    - cron: "0 3 1 * *"  # 1st of every month at 3am UTC
+  workflow_dispatch:       # allow manual trigger from GitHub UI
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Remove existing content to force full regeneration
+        run: echo "{}" > lib/dept-content.json
+
+      - name: Export department list
+        run: node scripts/export-departments.mjs
+
+      - name: Generate AI prose for all departments
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: node scripts/generate-content.mjs
+
+      - name: Commit and push updated content
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add lib/dept-content.json
+          git diff --cached --quiet || git commit -m "chore: refresh department AI content [$(date +%Y-%m)]"
+          git push
