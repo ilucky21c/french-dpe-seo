@@ -2,7 +2,7 @@ name: Refresh department content
 
 on:
   schedule:
-    - cron: "0 3 1 * *"  # 1st of every month at 3am UTC
+    - cron: "0 3 1 1,4,7,10 *"  # quarterly: 1st of Jan, Apr, Jul, Oct at 3am UTC
   workflow_dispatch:       # allow manual trigger from GitHub UI
 
 jobs:
