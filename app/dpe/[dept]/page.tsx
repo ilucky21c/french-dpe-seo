@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { DEPARTMENTS, getDeptBySlug, ZONE_LABELS } from "@/lib/departments";
 import { fetchDeptStats } from "@/lib/ademe";
+import deptContent from "@/lib/dept-content.json" with { type: "json" };
 
 export async function generateStaticParams() {
   return DEPARTMENTS.map((d) => ({ dept: d.slug }));
@@ -64,6 +65,7 @@ export default async function DeptPage({ params }: { params: Promise<{ dept: str
 
   const aboveNational = stats.avgConsumption !== null && stats.avgConsumption > NATIONAL_AVG_CONSUMPTION;
   const postcode = department.num.match(/^\d+$/) ? department.num.padStart(2, "0") + "000" : "75000";
+  const aiProse = (deptContent as Record<string, { prose: string }>)[department.slug]?.prose ?? null;
 
   const totalBuildings = stats.buildingTypes.maison + stats.buildingTypes.appartement + stats.buildingTypes.autre;
 
@@ -135,6 +137,19 @@ export default async function DeptPage({ params }: { params: Promise<{ dept: str
           )}
           <StatCard label="Artisans RGE" value={fmt(stats.rgeCount)} sub={`certifiés dept. ${department.num}`} />
         </div>
+      )}
+
+      {/* AI-generated local context */}
+      {aiProse && (
+        <Section>
+          <div className="space-y-3">
+            {aiProse.split("\n\n").filter(Boolean).map((para, i) => (
+              <p key={i} className="text-sm leading-relaxed" style={{ color: "hsl(220 25% 10%)" }}>
+                {para}
+              </p>
+            ))}
+          </div>
+        </Section>
       )}
 
       {/* DPE + GES class breakdown */}
